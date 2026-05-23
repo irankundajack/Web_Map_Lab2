@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kigali Population Heatmap</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+    <style>
+        body { margin: 0; }
+        #map { height: 100vh; width: 100%; }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <script>
+        var map = L.map('map').setView([-1.9500, 30.0600], 12);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+
+        // [latitude, longitude, density (population / area_km2)]
+        var heatData = [
+            [-1.8650, 30.1350, 2171],   // Bumbogo
+            [-1.9100, 30.0900, 4644],   // Kinyinya
+            [-1.8900, 30.1700, 2025],   // Ndera
+            [-1.9178, 30.0613, 8309],   // Gisozi
+            [-1.8500, 30.1100, 1222],   // Nduba
+            [-1.8750, 30.0700, 1726],   // Jabana
+            [-1.8600, 30.1500, 1471],   // Rusororo
+            [-1.9400, 30.1000, 6498],   // Kimironko
+            [-1.9250, 30.0550, 5642],   // Gatsata
+            [-1.8800, 30.1900, 1372],   // Jali
+            [-1.9476, 30.1061, 5294],   // Remera
+            [-1.9380, 30.0800, 5179],   // Kacyiru
+            [-1.8450, 30.1600, 468],    // Rutunga
+            [-1.8550, 30.1250, 491],    // Gikomero
+            [-1.9400, 30.0850, 3221],   // Kimihurura
+            [-2.0200, 30.0700, 2197],   // Gahanga
+            [-2.0400, 30.1200, 2462],   // Masaka
+            [-1.9700, 30.1400, 4019],   // Kanombe
+            [-1.9700, 30.0700, 12197],  // Gatenga
+            [-1.9850, 30.1100, 4210],   // Kigarama
+            [-1.9600, 30.1050, 4104],   // Nyarugunga
+            [-1.9750, 30.0800, 3845],   // Niboye
+            [-1.9750, 30.0900, 3868],   // Kagarama
+            [-1.9600, 30.0650, 4951],   // Gikondo
+            [-1.9650, 30.0750, 4680],   // Kicukiro
+            [-1.9497, 30.0586, 2092],   // Kigali
+            [-2.0000, 30.0200, 1992],   // Mageragere
+            [-1.9525, 30.0403, 17131],  // Kimisagara
+            [-1.9650, 30.0400, 12292],  // Nyamirambo
+            [-1.9200, 30.0100, 1149],   // Kanyinya
+            [-1.9600, 30.0500, 11832],  // Nyakabanda
+            [-1.9450, 30.0350, 3334],   // Gitega
+            [-1.9500, 30.0600, 6437],   // Muhima
+            [-1.9672, 30.0556, 3623],   // Nyarugenge
+            [-1.9686, 30.0556, 14754]   // Rwezamenyo
+        ];
+
+        // Normalize density values to 0-1 range
+        var maxDensity = Math.max(...heatData.map(d => d[2]));
+        var normalized = heatData.map(d => [d[0], d[1], d[2] / maxDensity]);
+
+        // Create heatmap
+        L.heatLayer(normalized, {
+            radius: 35,
+            blur: 25,
+            maxZoom: 14
+        }).addTo(map);
+    </script>
+</body>
+</html>

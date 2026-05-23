@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nyanza Cadastral Parcels Map</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link href="style.css" rel="stylesheet">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+</head>
+<body>
+    <div id="map"></div>
+
+    <script>
+        // Initialize the map centered on Kagarama, Kicukiro
+        var map = L.map('map').setView([-1.9750, 30.0900], 15);
+
+        // Add OpenStreetMap base layer
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // Color function based on LandUse attribute
+        function getLandUseColor(landuse) {
+            if (!landuse) return '#888888';
+            switch (landuse.toLowerCase()) {
+                case 'residential':  return '#8B4513';  // Brown
+                case 'agricultural': return '#228B22';  // Green
+                case 'commercial':   return '#DC143C';  // Red
+                default:             return '#888888';  // Grey for unknown
+            }
+        }
+
+        // Style each parcel based on LandUse
+        function styleParcel(feature) {
+            return {
+                fillColor: getLandUseColor(feature.properties.LandUse),
+                weight: 1,
+                opacity: 1,
+                color: '#333',
+                fillOpacity: 0.6
+            };
+        }
+
+        // Highlight on hover
+        function highlightFeature(e) {
+            var layer = e.target;
+            layer.setStyle({
+                weight: 3,
+                color: '#fff',
+                fillOpacity: 0.8
+            });
+            layer.bringToFront();
+        }
+
+        // Reset style on mouseout
+        function resetHighlight(e) {
+            geojsonLayer.resetStyle(e.target);
+        }
+
+        // Bind popup and hover events to each feature
+        function onEachFeature(feature, layer) {
+            var props = feature.properties;
+            var area = props.Shape_Area ? props.Shape_Area.toFixed(2) : 'N/A';
+            var popupContent = 
+                '<div style="font-family: Segoe UI, sans-serif; font-size: 13px;">' +
+                '<b>UPI:</b> ' + (props.upi || 'N/A') + '<br>' +
+                '<b>Land Use:</b> ' + (props.LandUse || 'N/A') + '<br>' +
+                '<b>Area:</b> ' + area + ' m&sup2;<br>' +
+                '<b>Cell:</b> ' + (props.cell || 'N/A') + '<br>' +
+                '<b>Village:</b> ' + (props.village || 'N/A') +
+                '</div>';
+            layer.bindPopup(popupContent);
+            layer.on({
+                mouseover: highlightFeature,
+                mouseout: resetHighlight
+            });
+        }
+
+        // Global variable for the GeoJSON layer
+        var geojsonLayer;
+
+        // Load the GeoJSON file
+        fetch('Nyanza_Village.geojson')
+            .then(function(response) { return response.json(); })
+            .then(function(data) {
+                geojsonLayer = L.geoJSON(data, {
+                    style: styleParcel,
+                    onEachFeature: onEachFeature
+                }).addTo(map);
+
+                // Zoom to fit the parcels
+                map.fitBounds(geojsonLayer.getBounds());
+            })
+            .catch(function(err) {
+                console.error('Error loading GeoJSON:', err);
+                alert('Error loading parcels data. Make sure kagarama_parcels.geojson is in the same folder.');
+            });
+
+        // Add Legend
+        var legend = L.control({ position: 'bottomright' });
+        legend.onAdd = function(map) {
+            var div = L.DomUtil.create('div', 'legend');
+            div.innerHTML = 
+                '<h4>Land Use</h4>' +
+                '<div class="legend-item"><div class="legend-color" style="background:#8B4513;"></div> Residential</div>' +
+                '<div class="legend-item"><div class="legend-color" style="background:#228B22;"></div> Agricultural</div>' +
+                '<div class="legend-item"><div class="legend-color" style="background:#DC143C;"></div> Commercial</div>' +
+                '<div class="legend-item"><div class="legend-color" style="background:#888888;"></div> Other</div>';
+            return div;
+        };
+        legend.addTo(map);
+
+        // Add Title
+        var info = L.control({ position: 'topleft' });
+        info.onAdd = function(map) {
+            var div = L.DomUtil.create('div', 'info-panel');
+            div.innerHTML = '<h4>Kagarama Cadastral Parcels</h4>Kicukiro District, Kigali City';
+            return div;
+        };
+        info.addTo(map);
+    </script>
+</body>
+</html>
